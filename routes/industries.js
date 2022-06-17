@@ -6,7 +6,13 @@ const slugify = require('slugify');
 
 router.get('/', async (req, res, next) => {
 	try {
-		const results = await db.query(`SELECT * FROM industries`);
+		const results = await db.query(`
+		SELECT i.field, i.code, array_agg(ci.comp_code) AS comp_codes
+		FROM industries AS i
+		JOIN comp_indust AS ci 
+		ON i.code = ci.ind_code
+		GROUP BY i.code`);
+
 		return res.json({ industries: results.rows });
 	} catch (e) {
 		return next(e);
