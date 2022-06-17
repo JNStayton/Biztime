@@ -26,13 +26,31 @@ router.get('/:code', async (req, res, next) => {
 
 		const invoiceResults = await db.query(`SELECT id FROM invoices WHERE comp_code=$1`, [ code ]);
 
+		const industryResults = await db.query(
+			`SELECT i.field 
+			FROM industries AS i 
+			JOIN comp_indust 
+			ON i.code = comp_indust.ind_code 
+			JOIN companies AS c 
+			ON c.code = comp_indust.comp_code 
+			WHERE c.code=$1`,
+			[ code ]
+		);
+
 		const companyData = companyResults.rows[0];
 		const invoiceData = invoiceResults.rows;
+		const industryData = industryResults.rows;
 
 		if (invoiceData.length != 0) {
 			companyData.invoices = invoiceData.map((invoice) => invoice.id);
 		} else {
 			companyData.invoices = null;
+		}
+
+		if (industryData.length != 0) {
+			companyData.industries = industryData.map((industry) => industry.field);
+		} else {
+			companyData.industries = null;
 		}
 
 		return res.json({ company: companyData });

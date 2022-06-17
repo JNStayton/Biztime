@@ -41,7 +41,8 @@ describe('GET /companies/:code', () => {
 				code: 'test',
 				description: 'testtesttest',
 				invoices: null,
-				name: 'Test'
+				name: 'Test',
+				industries: null
 			}
 		});
 	});
