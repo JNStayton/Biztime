@@ -91,6 +91,45 @@ router.patch('/:id', async (req, res, next) => {
 	}
 });
 
+//update the paid status of an invoice
+router.put('/:id', async (req, res, next) => {
+	try {
+		const { id } = req.params;
+		const results = await db.query(`SELECT * FROM invoices WHERE id=$1`, [ id ]);
+		if (results.rows.length == 0) {
+			throw new ExpressError('That invoice cannot be found in the DB', 404);
+		}
+
+		invoice = results.rows[0];
+
+		if (!req.body.paid) {
+			throw new ExpressError('Please include paid status of true or false', 400);
+		}
+
+		const { paid } = req.body;
+
+		if (invoice.paid == true && paid == false) {
+			invoice.paid_date = null;
+			invoice.paid = false;
+		} else if (invoice.paid == false && paid == true) {
+			invoice.paid = true;
+			invoice.paid_date = new Date();
+		}
+
+		const paid_status = invoice.paid;
+		const paid_date = invoice.paid_date;
+
+		const updated_results = await db.query(
+			`UPDATE invoices SET paid=$1, paid_date=$2 WHERE id=$3 RETURNING id, comp_code, amt, paid, add_date, paid_date`,
+			[ paid_status, paid_date, id ]
+		);
+
+		return res.status(200).json({ invoice: updated_results.rows[0] });
+	} catch (e) {
+		return next(e);
+	}
+});
+
 //delete a company
 router.delete('/:id', async (req, res, next) => {
 	try {
